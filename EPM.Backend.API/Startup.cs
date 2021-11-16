@@ -1,3 +1,5 @@
+using EPM.Backend.API.HostedServices;
+using EPM.Backend.API.Hubs;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -27,16 +29,22 @@ namespace EPM.Backend.API
         {
             services.AddControllers();
 
+            services.AddSignalR();
+
+            services.AddHostedService<UpdateMonitorHostedService>();
+
             services.AddCors(options =>
             {
-                options.AddPolicy("foo",
-                builder =>
-                {
-                    builder.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
-                });
-            });
+                options.AddPolicy("CorsPolicy", builder =>
+                    builder
+                        .WithOrigins("http://localhost:4200")
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials());
+            });         
 
-            services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = 1_074_790_400);
+            //services.Configure<FormOptions>(x => x.MultipartBodyLengthLimit = 1_074_790_400);
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -47,17 +55,16 @@ namespace EPM.Backend.API
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
-            app.UseRouting();
+            app.UseCors("CorsPolicy");
 
-            app.UseCors("foo");
-
-            app.UseAuthorization();
+            app.UseRouting();            
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapHub<MonitorHub>("/monitorhub");
             });
         }
     }

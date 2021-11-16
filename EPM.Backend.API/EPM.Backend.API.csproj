@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\EPM.Backend.BLL\EPM.Backend.BLL.csproj" />
     <ProjectReference Include="..\EPM.Backend.Model\EPM.Backend.Model.csproj" />
   </ItemGroup>
 

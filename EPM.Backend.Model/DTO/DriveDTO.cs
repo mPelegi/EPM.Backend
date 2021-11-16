@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EPM.Backend.Model
+namespace EPM.Backend.Model.DTO
 {
-    public class DriveModel
+    public class DriveDTO
     {
         #region Description
         public string Model { get; set; }

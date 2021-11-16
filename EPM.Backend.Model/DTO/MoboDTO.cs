@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EPM.Backend.Model
+namespace EPM.Backend.Model.DTO
 {
-    public class MoboModel
+    public class MoboDTO
     {
         public string Name { get; set; }
         public string Manufacturer { get; set; }

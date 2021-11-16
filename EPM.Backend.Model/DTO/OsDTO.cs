@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace EPM.Backend.Model
+namespace EPM.Backend.Model.DTO
 {
-    public class OSModel
+    public class OsDTO
     {
         #region Description
         public string Name { get; set; }

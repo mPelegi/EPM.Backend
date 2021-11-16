@@ -7,15 +7,15 @@ namespace EPM.Backend.Model.DTO
     public class DescriptionDTO
     {
         #region Hardwares
-        public CpuModel CPU { get; set; }
-        public GpuModel GPU { get; set; }
-        public MoboModel MotherBoard { get; set; }
-        public List<RamModel> RAMs { get; set; }
-        public List<DriveModel> Drives { get; set; }
+        public CpuDTO CPU { get; set; }
+        public GpuDTO GPU { get; set; }
+        public MoboDTO MotherBoard { get; set; }
+        public List<RamDTO> RAMs { get; set; }
+        public List<DriveDTO> Drives { get; set; }
         #endregion
 
         #region Softwares
-        public OSModel OperatingSystem { get; set; }
+        public OsDTO OperatingSystem { get; set; }
         #endregion
     }
 }
