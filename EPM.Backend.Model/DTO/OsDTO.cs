@@ -9,7 +9,7 @@ namespace EPM.Backend.Model.DTO
         #region Description
         public string Name { get; set; }
         public string Manufacturer { get; set; }
-        public string CSName { get; set; }
+        public string CsName { get; set; }
         public string RegisteredUser { get; set; }
         #endregion
     }

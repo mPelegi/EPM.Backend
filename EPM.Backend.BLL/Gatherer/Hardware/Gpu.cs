@@ -3,65 +3,107 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
-using System.Text;
 
 namespace EPM.Backend.BLL.Gatherer.Hardware
 {
     public class Gpu
     {
-        private static string VideoControllerQuery = "SELECT * FROM Win32_VideoController";
-        private ManagementObjectSearcher VideoControllerSearcher = new ManagementObjectSearcher(VideoControllerQuery);
-        private static List<PerformanceCounter> GpuCounters = new List<PerformanceCounter>();
+        private static Gpu Instance;
+        private static string VideoControllerQuery;
+        private ManagementObjectSearcher VideoControllerSearcher;
+        private static List<PerformanceCounter> GpuCounters;
 
-        public Gpu()
+        private Gpu()
         {
+            Initialize();
             SetGpuCounters();
             GpuLoadPercentage();
         }
 
-        public GpuDTO GetDescription()
+        public static Gpu GetInstance()
         {
-            GpuDTO retorno = new GpuDTO();
-
-            foreach (ManagementObject obj in VideoControllerSearcher.Get())
+            if (Instance == null)
             {
-                retorno.Name = Convert.ToString(obj["Name"]);
-                retorno.Manufacturer = Convert.ToString(obj["AdapterCompatibility"]);
-                //Unfortunately, WMI is only able to view up to 4.3gb of video memory, in my case I have 6gb, so I'll have to take it directly from the device name 
-                retorno.DedicatedMemoryGB = retorno.Name.Substring(retorno.Name.IndexOf("GB") - 2, 2).Trim();
+                Instance = new Gpu();
             }
 
-            return retorno;
+            return Instance;
+        }
+
+        private void Initialize()
+        {
+            VideoControllerQuery = "SELECT * FROM Win32_VideoController";
+            VideoControllerSearcher = new ManagementObjectSearcher(VideoControllerQuery);
+            GpuCounters = new List<PerformanceCounter>();
+        }
+
+        public GpuDTO GetDescription()
+        {
+            try
+            {
+                GpuDTO retorno = new GpuDTO();
+
+                foreach (ManagementObject obj in VideoControllerSearcher.Get())
+                {
+                    retorno.Name = Convert.ToString(obj["Name"]);
+                    retorno.Manufacturer = Convert.ToString(obj["AdapterCompatibility"]);
+                    //Unfortunately, WMI is only able to view up to 4.3gb of video memory, in my case I have 6gb, so I'll have to take it directly from the device name 
+                    retorno.DedicatedMemoryGB = retorno.Name.Substring(retorno.Name.IndexOf("GB") - 2, 2).Trim();
+                }
+
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
 
         public GpuDTO GetPerformance()
         {
-            GpuDTO retorno = new GpuDTO();
-            retorno.LoadPercentage = Math.Round(GpuLoadPercentage(), 2);
+            try
+            {
+                GpuDTO retorno = new GpuDTO();
 
+                retorno.LoadPercentage = Math.Round(GpuLoadPercentage(), 2);
 
-            return retorno;
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
 
         private void SetGpuCounters()
         {
-            PerformanceCounterCategory category = new PerformanceCounterCategory("GPU Engine");
-            string[] counterNames = category.GetInstanceNames();
-
-            foreach (string counterName in counterNames)
+            try
             {
-                if (counterName.EndsWith("engtype_3D"))
+                PerformanceCounterCategory category = new PerformanceCounterCategory("GPU Engine");
+                string[] counterNames = category.GetInstanceNames();
+
+                foreach (string counterName in counterNames)
                 {
-                    //var teste = category.GetCounters(counterName);
-                    foreach (PerformanceCounter counter in category.GetCounters(counterName))
+                    if (counterName.EndsWith("engtype_3D"))
                     {
-                        if (counter.CounterName == "Utilization Percentage")
+                        //var teste = category.GetCounters(counterName);
+                        foreach (PerformanceCounter counter in category.GetCounters(counterName))
                         {
-                            GpuCounters.Add(counter);
+                            if (counter.CounterName == "Utilization Percentage")
+                            {
+                                GpuCounters.Add(counter);
+                            }
                         }
                     }
                 }
             }
+            catch (Exception e)
+            {
+                return;
+            }
+            
         }
 
         private static decimal GpuLoadPercentage()

@@ -14,16 +14,15 @@ namespace EPM.Backend.API.HostedServices
 {
     public class UpdateMonitorHostedService : IHostedService, IDisposable
     {
-        private Timer Timer;
+        private List<Timer> Timers;
         public IServiceProvider Services { get; }
-        private PerformanceBLL PerformanceBLL;
-        private DescriptionBLL DescriptionBLL;
+        private MonitorBLL MonitorBLL;
 
         public UpdateMonitorHostedService(IServiceProvider services)
         {
             Services = services;
-            PerformanceBLL = new PerformanceBLL();
-            DescriptionBLL = new DescriptionBLL();
+            MonitorBLL = new MonitorBLL();
+            Timers = new List<Timer>();
         }
 
         private void UpdatePerformances(object state)
@@ -32,46 +31,36 @@ namespace EPM.Backend.API.HostedServices
             {
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<MonitorHub>>();
 
-                hubContext.Clients.Group("Monitor").SendAsync("UpdatePerformance", GetPerformance());
+                hubContext.Clients.Group("Monitor").SendAsync("UpdatePerformance", MonitorBLL.GetPerformances());
             }
         }
 
-        private void UpdateDescriptions()
+        private void UpdateDescriptions(object state)
         {
             using (var scope = Services.CreateScope())
             {
                 var hubContext = scope.ServiceProvider.GetRequiredService<IHubContext<MonitorHub>>();
 
-                hubContext.Clients.Group("Monitor").SendAsync("UpdateDescription", GetDescription());
+                hubContext.Clients.Group("Monitor").SendAsync("UpdateDescription", MonitorBLL.GetDescriptions());
             }
-        }
-
-        private PerformanceDTO GetPerformance() 
-        {
-            return PerformanceBLL.GetPerformances();
-        }
-
-        private DescriptionDTO GetDescription() 
-        {
-            return DescriptionBLL.GetDescriptions();
         }
 
         public void Dispose()
         {
-            Timer?.Dispose();
+            Timers?.ForEach(x => x.Dispose());
         }
 
         public Task StartAsync(CancellationToken cancellationToken)
         {
-            //UpdateDescriptions();
-            Timer = new Timer(UpdatePerformances, null, 0, 1000);
+            Timers.Add(new Timer(UpdateDescriptions, null, 0, 1000)); 
+            Timers.Add(new Timer(UpdatePerformances, null, 0, 1000));
 
             return Task.CompletedTask;
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
         {
-            Timer?.Change(Timeout.Infinite, 0);
+            Timers?.ForEach(x => x.Change(Timeout.Infinite, 0));
 
             return Task.CompletedTask;
         }

@@ -8,27 +8,53 @@ namespace EPM.Backend.BLL.Gatherer.Software
 {
     public class Os
     {
-        private static string OperatingSystemQuery = "SELECT * FROM Win32_OperatingSystem";
-        private ManagementObjectSearcher OperatingSystemSearcher = new ManagementObjectSearcher(OperatingSystemQuery);
+        private static Os Instance;
+        private static string OperatingSystemQuery;
+        private ManagementObjectSearcher OperatingSystemSearcher;
 
-        public Os()
+        private Os()
         {
+            Initialize();
+        }
+
+        public static Os GetInstance()
+        {
+            if (Instance == null)
+            {
+                Instance = new Os();
+            }
+
+            return Instance;
+        }
+
+        private void Initialize()
+        {
+            OperatingSystemQuery = "SELECT * FROM Win32_OperatingSystem";
+            OperatingSystemSearcher = new ManagementObjectSearcher(OperatingSystemQuery);
 
         }
 
         public OsDTO GetDescription()
         {
-            OsDTO retorno = new OsDTO();
-
-            foreach (ManagementObject obj in OperatingSystemSearcher.Get())
+            try
             {
-                retorno.Name = Convert.ToString(obj["Caption"]);
-                retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
-                retorno.CSName = Convert.ToString(obj["CSName"]);
-                retorno.RegisteredUser = Convert.ToString(obj["RegisteredUser"]);
-            }
+                OsDTO retorno = new OsDTO();
 
-            return retorno;
+                foreach (ManagementObject obj in OperatingSystemSearcher.Get())
+                {
+                    retorno.Name = Convert.ToString(obj["Caption"]);
+                    retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
+                    retorno.CsName = Convert.ToString(obj["CSName"]);
+                    retorno.RegisteredUser = Convert.ToString(obj["RegisteredUser"]);
+                }
+
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
     }
 }

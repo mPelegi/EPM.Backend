@@ -10,7 +10,7 @@ namespace EPM.Backend.Model.DTO
         public CpuDTO CPU { get; set; }
         public GpuDTO GPU { get; set; }
         public MoboDTO MotherBoard { get; set; }
-        public List<RamDTO> RAMs { get; set; }
+        public List<RamDTO> RAMS { get; set; }
         public List<DriveDTO> Drives { get; set; }
         #endregion
 

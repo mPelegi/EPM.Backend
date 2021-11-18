@@ -8,25 +8,51 @@ namespace EPM.Backend.BLL.Gatherer.Hardware
 {
     public class Mobo
     {
-        private static string MotherboardQuery = "SELECT * FROM Win32_ComputerSystem";
-        private ManagementObjectSearcher MotherboardSearcher = new ManagementObjectSearcher(MotherboardQuery);
+        private static Mobo Instance;
+        private static string MotherboardQuery;
+        private ManagementObjectSearcher MotherboardSearcher;
 
-        public Mobo()
+        private Mobo()
         {
+            Initialize();
+        }
+
+        public static Mobo GetInstance()
+        {
+            if (Instance == null)
+            {
+                Instance = new Mobo();
+            }
+
+            return Instance;
+        }
+
+        private void Initialize()
+        {
+            MotherboardQuery = "SELECT * FROM Win32_ComputerSystem";
+            MotherboardSearcher = new ManagementObjectSearcher(MotherboardQuery);
 
         }
 
         public MoboDTO GetDescription()
         {
-            MoboDTO retorno = new MoboDTO();
-
-            foreach (ManagementObject obj in MotherboardSearcher.Get())
+            try
             {
-                retorno.Name = Convert.ToString(obj["Model"]);
-                retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
-            }
+                MoboDTO retorno = new MoboDTO();
 
-            return retorno;
+                foreach (ManagementObject obj in MotherboardSearcher.Get())
+                {
+                    retorno.Name = Convert.ToString(obj["Model"]);
+                    retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
+                }
+
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
     }
 }

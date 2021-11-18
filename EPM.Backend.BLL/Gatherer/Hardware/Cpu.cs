@@ -1,64 +1,115 @@
 ﻿using EPM.Backend.Helpers;
 using EPM.Backend.Model.DTO;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Management;
-using System.Text;
 
 namespace EPM.Backend.BLL.Gatherer.Hardware
 {
     public class Cpu
     {
-        private static string ProcessorQuery = "SELECT * FROM Win32_Processor";
-        private ManagementObjectSearcher ProcessorSearcher = new ManagementObjectSearcher(ProcessorQuery);
-        private static PerformanceCounter PerformanceCounter = new PerformanceCounter("Processor Information", "% Processor Performance", "_Total");
-        private static PerformanceCounter LoadCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        CpuDTO cpuDTO = new CpuDTO();
+        private static Cpu Instance;
+        private static string ProcessorQuery;
+        private ManagementObjectSearcher ProcessorSearcher;
+        private static PerformanceCounter PerformanceCounter;
+        private static PerformanceCounter LoadCounter;
 
-        public Cpu()
+        private Cpu()
         {
+            Initialize();
             CpuClockPercentage();
             CpuLoadPercentage();
         }
 
-        public CpuDTO GetDescription()
+        public static Cpu GetInstance()
         {
-            CpuDTO retorno = new CpuDTO();
-
-            foreach (ManagementObject obj in ProcessorSearcher.Get())
+            if (Instance == null)
             {
-                retorno.Name = Convert.ToString(obj["Name"]);
-                retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
-                retorno.NumberOfPhysicalCores = Convert.ToString(obj["NumberOfCores"]);
-                retorno.NumberOfLogicalCores = Convert.ToString(obj["NumberOfLogicalProcessors"]);
+                Instance = new Cpu();
             }
 
-            return retorno;
+            return Instance;
+        }
+
+        private void Initialize()
+        {
+            ProcessorQuery = "SELECT * FROM Win32_Processor";
+            ProcessorSearcher = new ManagementObjectSearcher(ProcessorQuery);
+            PerformanceCounter = new PerformanceCounter("Processor Information", "% Processor Performance", "_Total");
+            LoadCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        }
+
+        public CpuDTO GetDescription()
+        {
+            try
+            {
+                CpuDTO retorno = new CpuDTO();
+
+                foreach (ManagementObject obj in ProcessorSearcher.Get())
+                {
+                    retorno.Name = Convert.ToString(obj["Name"]);
+                    retorno.Manufacturer = Convert.ToString(obj["Manufacturer"]);
+                    retorno.NumberOfPhysicalCores = Convert.ToString(obj["NumberOfCores"]);
+                    retorno.NumberOfLogicalCores = Convert.ToString(obj["NumberOfLogicalProcessors"]);
+                }
+
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
 
         public CpuDTO GetPerformance()
         {
-            foreach (ManagementObject obj in ProcessorSearcher.Get())
+            try
             {
-                cpuDTO.MaxClockSpeedMHz = Convert.ToDecimal(obj["MaxClockSpeed"]);
-                cpuDTO.MaxClockSpeedGHz = UnitConverter.MHzToGHz((uint)obj["MaxClockSpeed"]);
-                cpuDTO.ActualClockSpeedMHz = cpuDTO.MaxClockSpeedMHz * CpuClockPercentage() / 100;
-                cpuDTO.ActualClockSpeedGHz = cpuDTO.MaxClockSpeedGHz * CpuClockPercentage() / 100;
-                cpuDTO.LoadPercentage = Math.Round(CpuLoadPercentage(), 2);
-            }
+                CpuDTO retorno = new CpuDTO();
 
-            return cpuDTO;
+                foreach (ManagementObject obj in ProcessorSearcher.Get())
+                {
+                    retorno.MaxClockSpeedMHz = Convert.ToDecimal(obj["MaxClockSpeed"]);
+                    retorno.MaxClockSpeedGHz = UnitConverter.MHzToGHz((uint)obj["MaxClockSpeed"]);
+                    retorno.ActualClockSpeedMHz = retorno.MaxClockSpeedMHz * CpuClockPercentage() / 100;
+                    retorno.ActualClockSpeedGHz = retorno.MaxClockSpeedGHz * CpuClockPercentage() / 100;
+                    retorno.LoadPercentage = Math.Round(CpuLoadPercentage(), 2);
+                }
+
+                return retorno;
+            }
+            catch (Exception e)
+            {
+                return null;
+            }
+            
         }
 
         private decimal CpuClockPercentage()
         {
-            return (decimal)PerformanceCounter.NextValue();
+            try
+            {
+                return (decimal)PerformanceCounter.NextValue();
+            }
+            catch (Exception e)
+            {
+                return 0;
+            }
+            
         }
 
         private decimal CpuLoadPercentage()
         {
-            return (decimal)LoadCounter.NextValue();
+            try
+            {
+                return (decimal)LoadCounter.NextValue();
+            }
+            catch (Exception e)
+            {
+                return 0;
+            }
+            
         }
     }
 }
